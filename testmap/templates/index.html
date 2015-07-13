@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+	<title>demo</title>
+
+	<script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=91fcUGbvXDaGq9Bmhzfj2GOb"></script>
+	<script type="text/javascript" src="/static/js/jquery-1.11.3.js"></script>
+
+	<style type="text/css">
+		html,body{
+			width:85%;
+			height:85%;
+			margin:0;
+			font-family:"微软雅黑";
+		}
+	</style>
+</head>
+
+<body>
+	<div style="width:100%;height:100%;border:1px solid gray" id="container"></div>
+	测试ajax：
+	<button type="button" onclick="loadXMLDoc()">请求数据</button>
+	<div id="myDiv"></div>
+
+	测试django获得参数：{{ string }}
+	<br>
+	测试jquery：<button>Click me</button>
+	<p>This is a paragraph.</p>
+
+	<div id="showpoint">得到点</div>
+	<p id="point"></p>
+</body>
+
+</html>
+
+<script>
+	var point_from = null;
+	var point_to = null;
+	var map = new BMap.Map("container");	// 创建地图实例  
+
+    $(document).ready(function(){
+      // 字典 dict
+      $('#showpoint').click(function(){
+          $.getJSON("{% url 'ajax_returnPoint' %}",function(point){
+              //返回值 point 在这里是一个字典,也可以用 point['seq']
+              $('#point').append("["+point.seq + "] " + point.city + ':' + point.coord[0] + "," + point.coord[1] + "<br>");
+              if(point.seq == 0){
+              	point_from = new BMap.Point(point.coord[0],point.coord[1]);
+              	alert('['+point.seq+']'+'point_from:'+point_from.lng+','+point_from.lat);
+              	
+				map.centerAndZoom(new BMap.Point(point_from.lng, point_from.lat), 5);	//初始化地图，设置中心点坐标和地图级别  
+				map.enableScrollWheelZoom();
+
+              }else{
+              	//point_from = point_to; 	//正常顺序
+              	point_from = new BMap.Point(116.432045,39.910683);	//测试起点
+              	point_to = new BMap.Point(point.coord[0],point.coord[1]);
+              	alert('['+point.seq+']'+'point_from:'+point_from.lng+','+point_from.lat);
+              	alert('['+point.seq+']'+'point_to:'+point_to.lng+','+point_to.lat);
+
+				map.centerAndZoom(new BMap.Point(point_from.lng, point_from.lat), 5);	//初始化地图，设置中心点坐标和地图级别  
+				map.enableScrollWheelZoom();
+              	var point_vector = [point_from, point_to];
+				var polyline = new BMap.Polyline(point_vector, {strokeColor:"blue", strokeWeight:3, strokeOpacity:0.5}); //创建弧线对象
+				map.addOverlay(polyline); //添加到地图中
+
+              }
+          })
+      })
+
+    });
+</script>
+
+<script>
+//jquery
+$(document).ready(function(){
+  $("button").click(function(){
+    $("p").hide();
+  });
+});
+/*
+// 百度地图
+var map = new BMap.Map("container");	// 创建地图实例  
+map.centerAndZoom(new BMap.Point(100, 35), 5);	// 初始化地图，设置中心点坐标和地图级别  
+map.enableScrollWheelZoom();
+
+var beijingPosition= new BMap.Point(116.432045,39.910683);
+var xianPosition= new BMap.Point(108.54,34.16);
+var taiwanPosition= new BMap.Point(121.491121,25.127053);
+
+var points_1 = [beijingPosition,xianPosition];
+var polyline_1 = new BMap.Polyline(points_1, {strokeColor:"blue", strokeWeight:3, strokeOpacity:0.5}); //创建弧线对象
+map.addOverlay(polyline_1); //添加到地图中
+
+function showline(){
+var points_2 = [xianPosition,taiwanPosition];
+var polyline_2 = new BMap.Polyline(points_2, {strokeColor:"blue", strokeWeight:3, strokeOpacity:0.5}); //创建弧线对象
+map.addOverlay(polyline_2); //添加到地图中
+}
+setTimeout("showline()",2000); 
+*/
+</script>
