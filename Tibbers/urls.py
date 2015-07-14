@@ -20,10 +20,10 @@ from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 
 
 urlpatterns = [
-	url(r'^$', 'testmap.views.home', name='home'), #test
-    url(r'^admin/', include(admin.site.urls)),
-    url(r'^ajax_dict/$', 'testmap.views.ajax_returnPoint', name='ajax_returnPoint'),
+	url(r'^$', 'testmap.views.index', name='index'), #test
+    url(r'^admin/', include(admin.site.urls)),  #http://localhost:8000/ajax_returnPoint/?ip_des=1.1.1.1
+    url(r'^ajax_returnPoint/$', 'testmap.views.ajax_returnPoint', name='ajax_returnPoint'),
 ]
 
-#引用static新加入
+#引用static新加
 urlpatterns += staticfiles_urlpatterns()
