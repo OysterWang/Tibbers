@@ -1,6 +1,6 @@
 #coding:utf-8
 from django.shortcuts import render
-from django.http import JsonResponse
+from django.http.response import JsonResponse
 import socket
 
 #引用例子：points[0]['city']，seq=1为第一跳
@@ -16,6 +16,7 @@ points = [{
 "coord": [121.491121,25.127053]
 }]
 
+#request是必须的
 def index(request):
 	host_name = socket.getfqdn(socket.gethostname())	#获取服务器名称
 	host_local_ip = socket.gethostbyname(host_name)	#获取服务器ip
@@ -32,7 +33,7 @@ def index(request):
 def ajax_returnPoint(request):
 	ip_des = request.GET["ip_des"]
 	print ("ip_des: %s" %ip_des)
-	point = points[1]	#{'city': 'Beijing', 'coord': [108.54, 34.16], 'seq': 1}
+	point = points[0]	#{'city': 'Beijing', 'coord': [108.54, 34.16], 'seq': 1}
 	print ("#######\npoint:%s" %point)
 	return JsonResponse(point)
 

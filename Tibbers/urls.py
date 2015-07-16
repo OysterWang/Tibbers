@@ -9,7 +9,7 @@ Function views
 Class-based views
     1. Add an import:  from other_app.views import Home
     2. Add a URL to urlpatterns:  url(r'^$', Home.as_view(), name='home')
-Including another URLconf
+Including another URLconf2
     1. Add an import:  from blog import urls as blog_urls
     2. Add a URL to urlpatterns:  url(r'^blog/', include(blog_urls))
 """
@@ -18,10 +18,10 @@ from django.contrib import admin
 #引用static新加入
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 
-
+#http://localhost:8000/ajax_returnPoint?ip_des=1.1.1.1
 urlpatterns = [
-	url(r'^$', 'testmap.views.index', name='index'), #test
-    url(r'^admin/', include(admin.site.urls)),  #http://localhost:8000/ajax_returnPoint/?ip_des=1.1.1.1
+    url(r'^$', 'testmap.views.index', name='index'), 
+    url(r'^admin/', include(admin.site.urls)),  
     url(r'^ajax_returnPoint/$', 'testmap.views.ajax_returnPoint', name='ajax_returnPoint'),
 ]
 
