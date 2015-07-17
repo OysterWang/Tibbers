@@ -93,7 +93,7 @@ var host_coordinate_lng = $("#host_coordinate_lng").text();	//经度
 var host_coordinate_lat = $("#host_coordinate_lat").text();	//纬度
 map.centerAndZoom(new BMap.Point(host_coordinate_lng - 20, host_coordinate_lat - 7), 5);	//初始化地图，调整设置中心点坐标和地图级别
 map.enableScrollWheelZoom();
-
+var ip_des = null;
 //画线
 function drawMap(point){
 	if(point.seq == 1){
@@ -112,6 +112,8 @@ function drawMap(point){
 }
 
 //根据need_seq嵌套取trace结果
+/*
+//getJSON方式
 function getTrace(ip_des, need_seq){
     $.getJSON("{% url 'ajax_returnPoint'%}", {'ip_des':ip_des, 'need_seq': need_seq}, function(point, statusTxt, xhr){
 	    	//alert("need_seq:"+need_seq+",flag:"+point.flag)
@@ -126,35 +128,36 @@ function getTrace(ip_des, need_seq){
 	        getTrace(ip_des, ++need_seq);
 	    })
 }
+*/
+function getTrace(ip_des, need_seq){
+	$.ajax({
+		type : "get",
+		url : "ajax_returnPoint",
+		//data : "ip_des=" + ip_des + "&need_seq=" + need_seq,
+		data : {ip_des:ip_des, need_seq:need_seq},
+		async : true,
+		success : function(point, statusTxt, xhr){
+			if (point.flag==0) {
+				$('#result').append("Total " + (need_seq - 1) + " hops<br>");
+				return;
+			}
+			//alert("Error: "+xhr.status+": "+xhr.statusText);
+			$('#result').append("["+point.seq + "] " + point.city + ' : ' + point.ip + " "+ point.coord[0] + ", " + point.coord[1] + "<br>");
+			drawMap(point);
+			setTimeout("getTrace(ip_des, ++need_seq)",1000);
+			//getTrace(ip_des, ++need_seq);
+		},
+		failure: function(errMsg){
+			alert(errMsg);
+        }
+	});
+}
 
 $(document).ready(function(){
 	$("#submit_ip").click(function(){
-        var ip_des = $("#ip_des").val();
+        ip_des = $("#ip_des").val();
         getTrace(ip_des, need_seq)
 	});
 });
 </script>
 
-<script>
-/*
-// 百度地图
-var map = new BMap.Map("container");	// 创建地图实例  
-map.centerAndZoom(new BMap.Point(100, 35), 5);	// 初始化地图，设置中心点坐标和地图级别  
-map.enableScrollWheelZoom();
-
-var beijingPosition= new BMap.Point(116.432045,39.910683);
-var xianPosition= new BMap.Point(108.54,34.16);
-var taiwanPosition= new BMap.Point(121.491121,25.127053);
-
-var points_1 = [beijingPosition,xianPosition];
-var polyline_1 = new BMap.Polyline(points_1, {strokeColor:"blue", strokeWeight:3, strokeOpacity:0.5}); //创建弧线对象
-map.addOverlay(polyline_1); //添加到地图中
-
-function showline(){
-var points_2 = [xianPosition,taiwanPosition];
-var polyline_2 = new BMap.Polyline(points_2, {strokeColor:"blue", strokeWeight:3, strokeOpacity:0.5}); //创建弧线对象
-map.addOverlay(polyline_2); //添加到地图中
-}
-setTimeout("showline()",2000); 
-*/
-</script>

@@ -60,9 +60,10 @@ def index(request):
 
 def ajax_returnPoint(request):
 	ip_des = request.GET["ip_des"]
-	need_seq = int(request.GET["need_seq"]) - 1
+	need_seq = int(request.GET["need_seq"])
+	print("#####################################")
 	print ("ip_des: %s, need_seq: %s" %(ip_des,need_seq))
-	point = points[need_seq]
-	print ("#######\npoint:%s" %point)
+	point = points[need_seq - 1]
+	print ("\npoint:%s" %point)
 	return JsonResponse(point)
 
