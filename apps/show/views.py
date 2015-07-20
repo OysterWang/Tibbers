@@ -38,7 +38,7 @@ points = [{
 "flag" : 0
 }]
 
-#request是必须的
+#request是必须的。
 def trace(request):
 	host_name = socket.getfqdn(socket.gethostname())	#获取服务器名称
 	host_local_ip = socket.gethostbyname(host_name)	#获取服务器ip
