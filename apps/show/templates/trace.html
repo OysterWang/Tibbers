@@ -3,7 +3,8 @@
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 	<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
-	<title>demo</title>
+	<title>TRACE</title>
+	<link rel="shortcut icon" href="/static/images/favicon.ico" type="image/x-icon" />
 	<script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=91fcUGbvXDaGq9Bmhzfj2GOb"></script>
 	<script type="text/javascript" src="/static/js/jquery-1.11.3.js"></script>
 	<style type="text/css">
@@ -134,7 +135,7 @@ function getTrace(ip_des, need_seq){
 		type : "get",
 		url : "ajax_returnPoint",
 		//data : "ip_des=" + ip_des + "&need_seq=" + need_seq,
-		data : {ip_des:ip_des, need_seq:need_seq},
+		data : {"ip_des":ip_des, "need_seq":need_seq},
 		async : true,
 		success : function(point, statusTxt, xhr){
 			if (point.flag==0) {

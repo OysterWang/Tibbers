@@ -39,7 +39,7 @@ points = [{
 }]
 
 #request是必须的
-def index(request):
+def trace(request):
 	host_name = socket.getfqdn(socket.gethostname())	#获取服务器名称
 	host_local_ip = socket.gethostbyname(host_name)	#获取服务器ip
 	host_internet_ip = "202.106.57.170"	#获取服务器Internet ip
@@ -56,14 +56,13 @@ def index(request):
 	"host_name":host_name
 	}
 
-	return render(request, "index.html", {"point_start":point_start})
+	return render(request, "trace.html", {"point_start":point_start})
 
 def ajax_returnPoint(request):
 	ip_des = request.GET["ip_des"]
 	need_seq = int(request.GET["need_seq"])
-	print("#####################################")
+	print("*******************************************************")
 	print ("ip_des: %s, need_seq: %s" %(ip_des,need_seq))
 	point = points[need_seq - 1]
 	print ("\npoint:%s" %point)
 	return JsonResponse(point)
-

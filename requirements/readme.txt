@@ -18,13 +18,13 @@ django-admin startproject Tibbers
 D:\Python34\Lib\site-packages\Django-1.8.3-py3.4.egg\django\bin\django-admin startproject Tibbers
 
 3.
-目录Tibbers下，创建app：
+Tibbers相关目录下，创建app：
 django-admin startapp testmap
 注：
 D:\Python34\Lib\site-packages\Django-1.8.3-py3.4.egg\django\bin\django-admin startapp testmap
 
 4.
-增加app，并增加引用静态文件（如js、css、image等，在应用testmap下新建static/js/jquert-1.11.3.js即可以访问）。
+配置app，并增加引用静态文件（如js、css、image等，在应用testmap下新建static/js/jquert-1.11.3.js即可以访问）。
 vi Tibbers/settings.py：
 INSTALLED_APPS = (
     'django.contrib.admin',
