@@ -4,6 +4,45 @@
 http://api.map.baidu.com/api?v=1.5&ak=91fcUGbvXDaGq9Bmhzfj2GOb
 
 *******************************************************************
+
+"""
+E:\CloudSync\LITB_NETWORK_SYNC\Python_Projects\Tibbers\utils>tracert -d www.baidu.com
+
+通过最多 30 个跃点跟踪
+到 www.a.shifen.com [61.135.169.121] 的路由:
+
+  1    <1 毫秒    2 ms     1 ms  192.168.4.129
+  2    <1 毫秒   <1 毫秒   <1 毫秒 192.168.11.30
+  3     2 ms     2 ms     2 ms  202.106.57.169
+  4     1 ms     3 ms     2 ms  61.148.155.77
+  5     5 ms     3 ms     3 ms  61.148.146.29
+  6     3 ms     2 ms     2 ms  124.65.58.174
+  7     2 ms     3 ms     4 ms  123.125.248.90
+  8     *        *        *     请求超时。
+  9     2 ms     1 ms     1 ms  61.135.169.121
+
+跟踪完成。
+
+E:\CloudSync\LITB_NETWORK_SYNC\Python_Projects\Tibbers\utils>
+
+points = [{
+"flag" : 1,
+"seq"  : 1,
+"city" : "tianjin",
+"ip"   : "1.1.1.1",
+"coord": [117.20000,39.13333]
+},{
+"flag" : 1,
+"seq"  : 2,
+"city" : "shanghai",
+"ip"   : "2.2.2.2",
+"coord": [121.48,31.22]
+},{
+"flag" : 0
+}]
+"""
+
+******************************************************************
 Django notes
 1.
 python version 3.4.3，django安装：
@@ -77,3 +116,4 @@ def ajax_returnPoint(request):
 启动服务器，默认端口8000
 cd /d E:\CloudSync\LITB_NETWORK_SYNC\Python_Projects\Tibbers
 python manage.py runserver
+
