@@ -14,14 +14,16 @@ def trace_path(domain_str, need_seq):
     regex_ip = re.compile(r'(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|\*{1,3})')
     seq = 0
     target_ip = ""
+
     while True:
-        one_line = p.stdout.readline()
+        one_line = p.stdout.readline().decode('GBK')
         if not one_line:
            break
         #print("one_line:%s"%one_line)
         ip_extract = regex_ip.findall(one_line) #抽出每一hop中的ip list
         #print("ip_extract:%s"%ip_extract)
         if len(ip_extract) >= 1:
+            
             if seq == 0:    #第一个ip为目的ip，非hop中的
                 target_ip = ip_extract[0]
                 seq += 1
