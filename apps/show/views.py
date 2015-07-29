@@ -46,6 +46,7 @@ points_example = [{
 
 
 #request是必须的。
+#首页显示信息
 def trace(request):
 	host_name = socket.getfqdn(socket.gethostname())	#获取服务器名称
 	host_local_ip = socket.gethostbyname(host_name)	#获取服务器ip
@@ -68,22 +69,25 @@ def trace(request):
 def ajax_returnPoint(request):
 	ip_des = request.GET["ip_des"]
 	need_seq = int(request.GET["need_seq"])
-	print("*******************************************************")
-	print ("ip_des: %s, need_seq: %s" %(ip_des,need_seq))
-	
+	print ("*******************************************************")
+	print ("request ip_des: %s, need_seq: %s" %(ip_des,need_seq))
+	print ("*******************************************************")
+
 	#开始trace进程
 
-	if need_seq == 1:
+	if need_seq == 1:	#第一个请求会开始trace
+		traceThread = utils.trace_thread.TraceThread(ip_des)
+		traceThread.start()
 		#p1 = Process(target=trace_path, args=(ip_des, need_seq, points))
 		#p1.start()
 		#p1.join()
-		traceThread = utils.trace_thread.TraceThread(ip_des) #123.125.248.90
-		traceThread.start()
+		#traceThread = utils.trace_thread.TraceThread(ip_des) #123.125.248.90
+		#traceThread.start()
 
-	time.sleep(2)
-	seekThread = utils.trace_thread.SeekThread(need_seq)
-	seekThread.start()
+	time.sleep(1)
+	seekThread = utils.trace_thread.SeekThread(ip_des, need_seq)
 
+	'''
 	while True:
 		try:
 			print("############## loop for searching points[%d]" %(need_seq - 1))
@@ -93,8 +97,8 @@ def ajax_returnPoint(request):
 			print("exception:%s"%ex)
 			print("need_seq %d not got yet!"%need_seq)
 			time.sleep(0.5)
-
-	point_return = points[need_seq - 1]
+	'''
+	global point_return
 	print ("\nreturn point:%s" %point_return)
 	return JsonResponse(point_return)
 

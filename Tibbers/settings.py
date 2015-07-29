@@ -105,10 +105,10 @@ STATIC_URL = '/static/'
 
 #引用static新加入
 HERE_PATH=os.path.dirname(__file__) 
-print("HERE_PATH:%s"%HERE_PATH)
+#print("HERE_PATH:%s"%HERE_PATH)
 STATICFILES_DIRS = ( 
  os.path.join(HERE_PATH,"static").replace('\\','/'),
 )
-print("STATICFILES_DIRS%s"%STATICFILES_DIRS)
-print("os.path:%s"%os.path)
-print("BASE_DIR%s"%BASE_DIR)
+#print("STATICFILES_DIRS%s"%STATICFILES_DIRS)
+#print("os.path:%s"%os.path)
+#print("BASE_DIR%s"%BASE_DIR)
