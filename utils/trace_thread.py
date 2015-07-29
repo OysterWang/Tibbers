@@ -8,8 +8,8 @@ mutex2 = threading.Lock()
 point_return = {}
 
 def tmp_trace_txt_url(domain_str):
-	#tmp_trace_txt_url = "tmp/trace_"
-	tmp_trace_txt_url = "../tmp/trace_"
+	tmp_trace_txt_url = "tmp/trace_"
+	#tmp_trace_txt_url = "../tmp/trace_"
 	return tmp_trace_txt_url + domain_str + ".txt"
 
 class TraceThread(threading.Thread):
@@ -20,8 +20,8 @@ class TraceThread(threading.Thread):
 		self.ip_list = []
 		#self.points = []
 		print("%s created!" %self.getName())
-		print("%s-domain_str : %s "%(self.getName(), self.domain_str))
-		print("%s-cmd_str : %s"%(self.getName(), self.cmd_str))
+		print("%s domain_str : %s "%(self.getName(), self.domain_str))
+		print("%s cmd_str : %s"%(self.getName(), self.cmd_str))
 		self.trace_txt = open(tmp_trace_txt_url(self.domain_str),"w")
 
 	def trace_extract_save(self):
@@ -33,11 +33,11 @@ class TraceThread(threading.Thread):
 			if not one_line:
 		   		break
 			#print("one_line:%s"%one_line)
-			ip_extract = regex_ip.findall(one_line) #抽出含有ip的每一hop  one_line.decode('gbk')
+			ip_extract = regex_ip.findall(one_line.decode('gbk')) #抽出含有ip的每一hop  one_line.decode('gbk')
 			if len(ip_extract) >= 1:	#含有ip或者*的行要保存
 				num += 1
 				if mutex2.acquire():
-					self.trace_txt.write(one_line)	#oneline存入txt中
+					self.trace_txt.write(one_line.decode('gbk'))	#oneline存入txt中	one_line.decode('gbk')
 					self.trace_txt.flush()		
 					print("%s : write line[%d] ip:%s  %s" %(self.getName(), num, ip_extract[0], one_line))			
 					mutex2.release()
@@ -57,7 +57,7 @@ class SeekThread(threading.Thread):
 	def __init__(self, domain_str, need_seq):
 		threading.Thread.__init__(self)
 		self.domain_str = domain_str
-		self.need_seq = need_seq  + 1	#第need_seq *2 + 1行为需要的
+		self.need_seq = need_seq
 		self.target_ip = ""
 		#self.point = []
 		self.ip_list = []
@@ -65,7 +65,7 @@ class SeekThread(threading.Thread):
 		self.regex_ip = re.compile('(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|\*{1,3})')
 		print("******%s created. Need lines[%d]" %(self.getName(), self.need_seq))
 	
-	def seekSeq(self, need_seq):
+	def seekSeq(self):
 		loop_time = 1
 		global point_return
 		while True:
@@ -88,9 +88,10 @@ class SeekThread(threading.Thread):
 				#new
 				while True:
 					line = self.trace_txt.readline()
+					
+					print("******%s flag: %d origin line: %s" %(self.getName(), flag, line))
 					if not line:
 						print("******%s not line check , len(self.ip_list) = %d" %(self.getName(), len(self.ip_list)))
-						
 						#检查是否已经trace完，判断上一个seq请求的是否已经是target_ip
 						if self.ip_list[len(self.ip_list) - 1] == self.target_ip:
 							point = {}
@@ -99,31 +100,35 @@ class SeekThread(threading.Thread):
 							print("******%s make it into point: %s" %(self.getName(), point))
 							point_return = point
 							return point
-						break
-					if flag == 0:	#第一行
+						break	#重新open
+
+					if flag == 0:	#此行是第一行
 						ip_extract = self.regex_ip.findall(line)
 						self.target_ip = ip_extract[0]
 						flag += 1
+						print("******%s line[0]: %s" %(self.getName(), line))
 						print("******%s target_ip: %s" %(self.getName(), self.target_ip))
 						continue
-					else:	#非第一行
+					else:	#此行不是第一行
 						if self.need_seq == flag:	#到了need_seq行
 							ip_extract = self.regex_ip.findall(line)
 							if len(ip_extract) >= 1:
 								point = {}
-								point['flag'] = 1
-								point['seq'] = self.need_seq - 1
-								point['city'] = ""
-								point['ip'] = ip_extract[0]
-								point['coord'] = []
+								point["flag"] = 1
+								point["seq"] = self.need_seq
+								point["city"] = "Tianjin"
+								point["ip"] = ip_extract[0]
+								point["coord"] = [117.20000,39.13333]
 								self.ip_list.append(ip_extract[0])
-								print("******%s find lines[%d]: %s"%(self.getName(), self.need_seq, ip_extract[0]))	#.decode('gbk')
+								print("******%s find lines[%d]: %s  %s"%(self.getName(), self.need_seq, ip_extract[0], line))
 								print("******%s make it into point: %s" %(self.getName(), point))
 								print("******%s len(self.ip_list) = %d" %(self.getName(), len(self.ip_list)))
 								#mutex.release()
 								point_return = point
-								return point
+								return
+								#return point
 						else:	#未到need_seq行，加入list
+							print("******%s not yet line[%d/%d]: %s" %(self.getName(), flag, self.need_seq, line))
 							ip_extract = self.regex_ip.findall(line)
 							if len(ip_extract) >= 1:
 								self.ip_list.append(ip_extract[0])
@@ -153,7 +158,7 @@ class SeekThread(threading.Thread):
 				continue	#重新open
 
 	def run(self):
-		self.seekSeq(self.need_seq)
+		self.seekSeq()
 		print ("******%s over" %self.getName())
 
 if __name__ == "__main__":

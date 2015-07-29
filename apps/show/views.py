@@ -1,7 +1,7 @@
 #coding:utf-8
 from django.shortcuts import render
 from django.http.response import JsonResponse
-import socket
+import socket, time
 
 #引入trace
 #from utils import getpoints
@@ -86,7 +86,8 @@ def ajax_returnPoint(request):
 
 	time.sleep(1)
 	seekThread = utils.trace_thread.SeekThread(ip_des, need_seq)
-
+	seekThread.start()
+	seekThread.join()
 	'''
 	while True:
 		try:
@@ -98,8 +99,8 @@ def ajax_returnPoint(request):
 			print("need_seq %d not got yet!"%need_seq)
 			time.sleep(0.5)
 	'''
-	global point_return
-	print ("\nreturn point:%s" %point_return)
-	return JsonResponse(point_return)
+	
+	print ("\nreturn point:%s" %utils.trace_thread.point_return)
+	return JsonResponse(utils.trace_thread.point_return)
 
 
