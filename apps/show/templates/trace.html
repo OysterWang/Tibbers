@@ -7,6 +7,7 @@
 	<link rel="shortcut icon" href="/static/images/favicon.ico" type="image/x-icon" />
 	<script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=91fcUGbvXDaGq9Bmhzfj2GOb"></script>
 	<script type="text/javascript" src="/static/js/jquery-1.11.3.js"></script>
+	<script type="text/javascript" src="/static/js/TextIconOverlay_min.js"></script>
 	<style type="text/css">
 	#Container{
 	    width:100%;
@@ -19,18 +20,19 @@
 	    float:left;
 	}
 	#panel{
-		width:25%;
+		font-family: verdana,arial,sans-serif;
+		font-size:14px;
+		width:30%;
 	    height:800px;
 	    margin:10px;
 	    float:left;
 	}
-	#table_info {
-	font-family: verdana,arial,sans-serif;
-	font-size:11px;
-	color:#333333;
-	border-width: 1px;
-	border-color: #666666;
-	border-collapse: collapse;
+	#table_info{
+		font-family: verdana,arial,sans-serif;
+		color:#333333;
+		border-width: 1px;
+		border-color: #666666;
+		border-collapse: collapse;
 	}
 	#table_info td {
 		border-width: 0px;
@@ -89,16 +91,39 @@
 var point_from = null;
 var point_to = null;
 var need_seq = 1;
-var map = new BMap.Map("map");	
+var ip_des = null;
 var host_coordinate_lng = $("#host_coordinate_lng").text();	//经度
 var host_coordinate_lat = $("#host_coordinate_lat").text();	//纬度
 var last_point_lng = host_coordinate_lng;
 var last_point_lat = host_coordinate_lat;
-map.centerAndZoom(new BMap.Point(host_coordinate_lng - 20, host_coordinate_lat - 7), 5);	//初始化地图，调整设置中心点坐标和地图级别
+
+var map = new BMap.Map("map");	
+var mapStyle ={
+	style : "light"  //设置地图风格，normal, light, dark, redalert, googlelite, grassgreen, midnight, pink, darkgreen, bluish, grayscale, hardedge
+}
+var origin_point = new BMap.Point(host_coordinate_lng, host_coordinate_lat);
+
+map.setMapStyle(mapStyle);
+map.centerAndZoom(origin_point, 5);	//初始化地图，调整设置中心点坐标和地图级别
 map.enableScrollWheelZoom();
-var ip_des = null;
+
+//原始标注
+//var marker = new BMap.Marker(origin_point);
+//map.addOverlay(marker);
+var rm = new BMapLib.TextIconOverlay(origin_point, 0);
+map.addOverlay(rm);
+
+
+/*
+自定义标注
+var myIcon = new BMap.Icon("http://developer.baidu.com/map/jsdemo/img/fox.gif", new BMap.Size(300,157));
+var marker2 = new BMap.Marker(pt,{icon:myIcon});  // 创建标注
+map.addOverlay(marker2);              // 将标注添加到地图中
+*/
+
+
 //画线
-function drawMap(point){
+function drawLine(point){
 	if(point.coord[0] == null || point.coord[1] == null){
 		point.coord[0] = last_point_lng;
 		point.coord[1] = last_point_lat;
@@ -106,18 +131,22 @@ function drawMap(point){
 	if(point.seq == 1){
 		//起点
 		point_from = new BMap.Point(host_coordinate_lng, host_coordinate_lat);
-		point_to = new BMap.Point(point.coord[0],point.coord[1]);
+		point_to = new BMap.Point(point.coord[0], point.coord[1]);
 		//alert('['+point.seq+']'+'point_from:'+point_from.lng+','+point_from.lat);
 	}else{
 		point_from = point_to;
-		point_to = new BMap.Point(point.coord[0],point.coord[1]);
+		point_to = new BMap.Point(point.coord[0], point.coord[1]);
 		//alert('['+point.seq+']'+'point_from:'+point_from.lng+','+point_from.lat);
 	}
 	last_point_lng = point.coord[0];
 	last_point_lat = point.coord[1];
 	var point_vector = [point_from, point_to];
-	var polyline = new BMap.Polyline(point_vector, {strokeColor:"blue", strokeWeight:3, strokeOpacity:0.5});
+	var polyline = new BMap.Polyline(point_vector, {strokeColor:"blue", strokeWeight:3, strokeOpacity:0.5, strokeStyle:"dashed"});
 	map.addOverlay(polyline); //添加到地图中
+	
+	var rm = new BMapLib.TextIconOverlay(new BMap.Point(point.coord[0], point.coord[1]), point.seq);
+	map.addOverlay(rm);
+	map.panTo(new BMap.Point(point.coord[0], point.coord[1]))
 }
 
 //根据need_seq嵌套取trace结果
@@ -151,8 +180,8 @@ function getTrace(ip_des, need_seq){
 				return;
 			}
 			//alert("Error: "+xhr.status+": "+xhr.statusText);
-			drawMap(point);
-			$('#result').append("["+point.seq + "] " + point.city + ' : ' + point.ip + "	coord : "+ point.coord[0] + ", " + point.coord[1] + "<br>");
+			drawLine(point);		
+			$('#result').append("["+point.seq + "] " + point.city + ' : ' + point.ip + "      coord : "+ point.coord[0] + ", " + point.coord[1] + "<br>");
 			
 			setTimeout("getTrace(ip_des, ++need_seq)",1000);
 			//getTrace(ip_des, ++need_seq);

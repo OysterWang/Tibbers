@@ -56,7 +56,7 @@ def parse_geo(ip, seq):
 	country_name = list_country_name[0]
 	country_code = list_country_code[0]
 	district = list_district[0]
-	city = list_city[0]
+	city = list_city[0] if list_city[0] else "Not known"
 	local_time = list_local_time[0]
 	coordinate_lat = list_coordinate_lat[0]
 	coordinate_lng = list_coordinate_lng[0]
