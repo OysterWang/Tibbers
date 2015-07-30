@@ -3,13 +3,13 @@ import threading
 import time, re
 from subprocess import Popen, PIPE
 
-mutex = threading.Lock()
-mutex2 = threading.Lock()
+import utils.parse_geo
+
 point_return = {}
 
 def tmp_trace_txt_url(domain_str):
-	tmp_trace_txt_url = "tmp/trace_"
-	#tmp_trace_txt_url = "../tmp/trace_"
+	tmp_trace_txt_url = "tmp/trace_"	#web用
+	#tmp_trace_txt_url = "../tmp/trace_"	#测试用
 	return tmp_trace_txt_url + domain_str + ".txt"
 
 class TraceThread(threading.Thread):
@@ -18,38 +18,29 @@ class TraceThread(threading.Thread):
 		self.domain_str = domain_str
 		self.cmd_str = "tracert -d " + self.domain_str
 		self.ip_list = []
-		#self.points = []
 		print("%s created!" %self.getName())
 		print("%s domain_str : %s "%(self.getName(), self.domain_str))
 		print("%s cmd_str : %s"%(self.getName(), self.cmd_str))
 		self.trace_txt = open(tmp_trace_txt_url(self.domain_str),"w")
 
 	def trace_extract_save(self):
-		regex_ip = re.compile('(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|\*{1,3})')	#
+		regex_ip = re.compile('(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|\*{1,3})')
 		p = Popen(self.cmd_str, stdout=PIPE)
 		num = 0
 		while True:
 			one_line = p.stdout.readline()
 			if not one_line:
 		   		break
-			#print("one_line:%s"%one_line)
 			ip_extract = regex_ip.findall(one_line.decode('gbk')) #抽出含有ip的每一hop  one_line.decode('gbk')
 			if len(ip_extract) >= 1:	#含有ip或者*的行要保存
 				num += 1
-				if mutex2.acquire():
-					self.trace_txt.write(one_line.decode('gbk'))	#oneline存入txt中	one_line.decode('gbk')
-					self.trace_txt.flush()		
-					print("%s : write line[%d] ip:%s  %s" %(self.getName(), num, ip_extract[0], one_line))			
-					mutex2.release()
+				self.trace_txt.write(one_line.decode('gbk').strip("\n"))	#oneline存入txt中	one_line.decode('gbk')
+				self.trace_txt.flush()
+				#print("%s : write line[%d] ip:%s  %s" %(self.getName(), num, ip_extract[0], one_line))			
 		self.trace_txt.close()
 		
 	def run(self):
 		self.trace_extract_save()
-		#point = {}
-		#point['flag'] = 0
-		#self.points.append(point)	#trace结束
-		#print ("%s-points%s"%(self.getName(), self.points))
-		#print ("%s-ip_list:%s"%(self.getName(), self.ip_list))
 		print ("%s-tracert %s end!"%(self.getName(), self.domain_str))
 		print ("%s over" %self.getName())
 
@@ -75,16 +66,8 @@ class SeekThread(threading.Thread):
 			loop_time += 1
 			flag = 0
 			self.ip_list = []
-			#if mutex.acquire():
+
 			try:
-				'''
-				lines = self.trace_txt.readlines(self.readLinesNum)	#txt一次整体读入readLinesNum行
-				if lines[0]:	#第一行非hop中的，ip为目的ip
-					ip_extract = self.regex_ip.findall(lines[0])
-					self.target_ip = ip_extract[0]
-				else:
-					continue	#重新open
-				'''
 				#new
 				while True:
 					line = self.trace_txt.readline()
@@ -99,31 +82,32 @@ class SeekThread(threading.Thread):
 							print("******%s already to the last hop" %(self.getName()))
 							print("******%s make it into point: %s" %(self.getName(), point))
 							point_return = point
-							return point
+							return
 						break	#重新open
 
 					if flag == 0:	#此行是第一行
 						ip_extract = self.regex_ip.findall(line)
 						self.target_ip = ip_extract[0]
 						flag += 1
-						print("******%s line[0]: %s" %(self.getName(), line))
-						print("******%s target_ip: %s" %(self.getName(), self.target_ip))
+						#print("******%s line[0]: %s" %(self.getName(), line))
+						#print("******%s target_ip: %s" %(self.getName(), self.target_ip))
 						continue
 					else:	#此行不是第一行
 						if self.need_seq == flag:	#到了need_seq行
 							ip_extract = self.regex_ip.findall(line)
 							if len(ip_extract) >= 1:
 								point = {}
-								point["flag"] = 1
-								point["seq"] = self.need_seq
-								point["city"] = "Tianjin"
-								point["ip"] = ip_extract[0]
-								point["coord"] = [117.20000,39.13333]
+								#point["flag"] = 1  #常量
+								#point["seq"] = self.need_seq	#传参
+								#point["ip"] = ip_extract[0]	#传参
+								#point["city"] = "Tianjin"	#需parse
+								#point["coord"] = [117.20000,39.13333]	#需parse
+								point = utils.parse_geo.parse_geo(ip_extract[0], self.need_seq)
+
 								self.ip_list.append(ip_extract[0])
 								print("******%s find lines[%d]: %s  %s"%(self.getName(), self.need_seq, ip_extract[0], line))
 								print("******%s make it into point: %s" %(self.getName(), point))
 								print("******%s len(self.ip_list) = %d" %(self.getName(), len(self.ip_list)))
-								#mutex.release()
 								point_return = point
 								return
 								#return point
@@ -154,7 +138,6 @@ class SeekThread(threading.Thread):
 				'''
 			except Exception as ex:
 				print("******%s Exception: %s" %(self.getName(), ex))
-				#mutex.release()
 				continue	#重新open
 
 	def run(self):

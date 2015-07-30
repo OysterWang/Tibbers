@@ -3,11 +3,7 @@ from django.shortcuts import render
 from django.http.response import JsonResponse
 import socket, time
 
-#引入trace
-#from utils import getpoints
 import utils.trace_thread
-#from multiprocessing import Process
-
 
 #引用例子：points[0]['city']，seq=1为第一跳
 points_example = [{
