@@ -1,4 +1,4 @@
-#coding:utf-8
+﻿#coding:utf-8
 from django.shortcuts import render
 from django.http.response import JsonResponse
 import socket, time
@@ -43,7 +43,7 @@ points_example = [{
 
 #request是必须的。
 #首页显示信息
-def trace(request):
+def index(request):
 	host_name = socket.getfqdn(socket.gethostname())	#获取服务器名称
 	host_local_ip = socket.gethostbyname(host_name)	#获取服务器ip
 	host_internet_ip = "202.106.57.170"	#获取服务器Internet ip
@@ -98,5 +98,3 @@ def ajax_returnPoint(request):
 	
 	print ("\nreturn point:%s" %utils.trace_thread.point_return)
 	return JsonResponse(utils.trace_thread.point_return)
-
-

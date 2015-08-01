@@ -20,8 +20,9 @@ from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 
 #http://localhost:8000/ajax_returnPoint?ip_des=1.1.1.1
 urlpatterns = [
-    url(r'^trace$', 'apps.show.views.trace', name='trace'), 
-    url(r'^ajax_returnPoint/$', 'apps.show.views.ajax_returnPoint', name='ajax_returnPoint'),
+    url(r'^trace$', 'apps.trace.views.index', name='trace'), 
+    url(r'^ajax_returnPoint/$', 'apps.trace.views.ajax_returnPoint', name='ajax_returnPoint'),
+    url(r'^alive','apps.alive.views.index',name='alive'),
     url(r'^admin/', include(admin.site.urls)),  
 ]
 

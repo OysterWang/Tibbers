@@ -38,7 +38,8 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
 #自定义应用
-    'apps.show',
+    'apps.trace',
+    'apps.alive',
 )
 
 MIDDLEWARE_CLASSES = (

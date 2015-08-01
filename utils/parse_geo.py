@@ -33,8 +33,8 @@ def parse_geo(ip, seq):
 
 	response = urllib.request.urlopen("https://geoiptool.com/zh/?ip=" + ip)
 	geo_html = response.read().decode("utf-8")
-	f1 = open(tmp_geoiptool_html_url,"w")
-	f1.write(geo_html)
+	#f1 = open(tmp_geoiptool_html_url,"w")
+	#f1.write(geo_html)
 
 	#网页正则表达式
 	regex_country_name = re.compile(r'<span class="bold">国家:</span>\s*<span>\s*<img src=.*>\s*(.*)\s*</span>')

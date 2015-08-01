@@ -4,6 +4,7 @@ import time, re
 from subprocess import Popen, PIPE
 
 import utils.parse_geo
+import utils.parse_ipinfo
 
 point_return = {}
 
@@ -102,8 +103,8 @@ class SeekThread(threading.Thread):
 								#point["ip"] = ip_extract[0]	#传参
 								#point["city"] = "Tianjin"	#需parse
 								#point["coord"] = [117.20000,39.13333]	#需parse
-								point = utils.parse_geo.parse_geo(ip_extract[0], self.need_seq)
-
+								#point = utils.parse_geo.parse_geo(ip_extract[0], self.need_seq)	#geo tool
+								point = utils.parse_ipinfo.parse_ipinfo(ip_extract[0], self.need_seq)	#ipinfo tool
 								self.ip_list.append(ip_extract[0])
 								print("******%s find lines[%d]: %s  %s"%(self.getName(), self.need_seq, ip_extract[0], line))
 								print("******%s make it into point: %s" %(self.getName(), point))
