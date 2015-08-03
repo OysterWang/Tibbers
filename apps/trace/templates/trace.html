@@ -107,43 +107,48 @@ map.setMapStyle(mapStyle);
 map.centerAndZoom(origin_point, 5);	//初始化地图，调整设置中心点坐标和地图级别
 map.enableScrollWheelZoom();
 
-//原始标注
+//原始标注例子
 //var marker = new BMap.Marker(origin_point);
 //map.addOverlay(marker);
-var rm = new BMapLib.TextIconOverlay(origin_point, 0);
+
+//特殊标注
+var rm = new BMapLib.TextIconOverlay(origin_point, 0);	//参数：1：BMap.Point; 2.显示数字
 map.addOverlay(rm);
 
-
 /*
-自定义标注
+自定义标注例子
 var myIcon = new BMap.Icon("http://developer.baidu.com/map/jsdemo/img/fox.gif", new BMap.Size(300,157));
 var marker2 = new BMap.Marker(pt,{icon:myIcon});  // 创建标注
 map.addOverlay(marker2);              // 将标注添加到地图中
 */
 
-
-//画线
+//画线, 构造数组point_vector，一条线的起点和终点。
+//参数：point：一条线的终点。
 function drawLine(point){
+	//如果新点没有经纬度，则还是上一个点的经纬度
 	if(point.coord[0] == null || point.coord[1] == null){
 		point.coord[0] = last_point_lng;
 		point.coord[1] = last_point_lat;
 	}
+
 	if(point.seq == 1){
-		//起点
+		//如果是第一跳，起始点是host点
 		point_from = new BMap.Point(host_coordinate_lng, host_coordinate_lat);
 		point_to = new BMap.Point(point.coord[0], point.coord[1]);
 		//alert('['+point.seq+']'+'point_from:'+point_from.lng+','+point_from.lat);
 	}else{
+		//如果不是第一跳，上一个point_to为起点
 		point_from = point_to;
 		point_to = new BMap.Point(point.coord[0], point.coord[1]);
 		//alert('['+point.seq+']'+'point_from:'+point_from.lng+','+point_from.lat);
 	}
-	last_point_lng = point.coord[0];
-	last_point_lat = point.coord[1];
-	var point_vector = [point_from, point_to];
+	last_point_lng = point.coord[0];	//本次终点计入last_point
+	last_point_lat = point.coord[1];	//本次终点计入last_point
+	var point_vector = [point_from, point_to];	//构造数组，一条线的起点和终点
 	var polyline = new BMap.Polyline(point_vector, {strokeColor:"blue", strokeWeight:3, strokeOpacity:0.5, strokeStyle:"dashed"});
-	map.addOverlay(polyline); //添加到地图中
+	map.addOverlay(polyline);	//添加到地图中
 	
+	//特殊标注
 	var rm = new BMapLib.TextIconOverlay(new BMap.Point(point.coord[0], point.coord[1]), point.seq);
 	map.addOverlay(rm);
 	map.panTo(new BMap.Point(point.coord[0], point.coord[1]))
@@ -172,19 +177,19 @@ function getTrace(ip_des, need_seq){
 		type : "get",
 		url : "ajax_returnPoint",
 		//data : "ip_des=" + ip_des + "&need_seq=" + need_seq,
-		data : {"ip_des":ip_des, "need_seq":need_seq},
+		data : {"ip_des" : ip_des, "need_seq" : need_seq},
 		async : true,
 		success : function(point, statusTxt, xhr){
+			//回调函数，point为需要的下一跳结果
 			if (point.flag == 0) {
+				//返回点的flag == 0，表示trace结束
 				$('#result').append("Total " + (need_seq - 1) + " hops<br>");
 				return;
 			}
 			//alert("Error: "+xhr.status+": "+xhr.statusText);
-			drawLine(point);		
-			$('#result').append("["+point.seq + "] " + point.city + ' : ' + point.ip + "      coord : "+ point.coord[0] + ", " + point.coord[1] + "<br>");
-			
-			setTimeout("getTrace(ip_des, ++need_seq)",1000);
-			//getTrace(ip_des, ++need_seq);
+			drawLine(point);	//地图画线
+			$('#result').append("["+point.seq + "] " + point.city + ' : ' + point.ip + "      coord : "+ point.coord[0] + ", " + point.coord[1] + "<br>");	//显示hop文字
+			setTimeout("getTrace(ip_des, ++need_seq)",1000);	//每隔1秒，嵌套发出请求，每次的need_seq加1
 		},
 		failure: function(errMsg){
 			alert(errMsg);
@@ -195,7 +200,7 @@ function getTrace(ip_des, need_seq){
 $(document).ready(function(){
 	$("#submit_ip").click(function(){
 		$('#result').empty()
-        ip_des = $("#ip_des").val();
+        ip_des = $("#ip_des").val();	//得到文本框需要的域名或ip
         getTrace(ip_des, need_seq)
 	});
 });

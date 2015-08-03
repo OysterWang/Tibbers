@@ -6,7 +6,6 @@ import re
 import codecs
 import string
 
-#check函数
 def checkPing(iplist, list_length):
 	f = open(iplist,"r")
 	row = 0
@@ -62,8 +61,7 @@ def getIPlistLength(iplist):
 	return len(open(iplist,'r').readlines()) - 3
 
 def getResults():
-	#检查配置文件conf.ini，读取iplist,运行check()
-	iplist_url = "apps/alive/configs/iplist.txt"	#web用
+	iplist_url = "apps/alive/configs/iplist.txt"	#web用，读取iplist.txt里需要检测的ip列表
 	#iplist_url = "../apps/alive/configs/iplist.txt"	#测试用
 	if os.path.exists(iplist_url):
 		print ("iplist path: " + iplist_url)

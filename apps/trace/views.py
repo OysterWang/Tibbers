@@ -5,6 +5,7 @@ import socket, time
 
 import utils.trace_thread
 
+'''
 #引用例子：points[0]['city']，seq=1为第一跳
 points_example = [{
 "flag" : 1,
@@ -19,30 +20,11 @@ points_example = [{
 "ip"   : "2.2.2.2",
 "coord": [121.48,31.22]
 },{
-"flag" : 1,
-"seq"  : 3,
-"city" : "guangzhou",
-"ip"   : "3.3.3.3",
-"coord": [113.23333,23.16667]
-},{
-"flag" : 1,
-"seq"  : 4,
-"city" : "hongkong",
-"ip"   : "4.4.4.4",
-"coord": [114.10000,22.20000]
-},{
-"flag" : 1,
-"seq"  : 5,
-"city" : "taiwan",
-"ip"   : "5.5.5.5",
-"coord": [121.491121,25.127053]
-},{
 "flag" : 0
 }]
+'''
 
-
-#request是必须的。
-#首页显示信息
+#trace首页显示信息
 def index(request):
 	host_name = socket.getfqdn(socket.gethostname())	#获取服务器名称
 	host_local_ip = socket.gethostbyname(host_name)	#获取服务器ip
@@ -62,6 +44,7 @@ def index(request):
 
 	return render(request, "trace.html", {"point_start":point_start})
 
+#前台jquery不断查询seed_seq的这一跳结果
 def ajax_returnPoint(request):
 	ip_des = request.GET["ip_des"]
 	need_seq = int(request.GET["need_seq"])
@@ -69,9 +52,8 @@ def ajax_returnPoint(request):
 	print ("request ip_des: %s, need_seq: %s" %(ip_des,need_seq))
 	print ("*******************************************************")
 
-	#开始trace进程
-
-	if need_seq == 1:	#第一个请求会开始trace
+	#开始trace_thread模块的TraceThread进程
+	if need_seq == 1:	#第一个请求会开始trace，将记录保存在tmp目录下
 		traceThread = utils.trace_thread.TraceThread(ip_des)
 		traceThread.start()
 		#p1 = Process(target=trace_path, args=(ip_des, need_seq, points))
@@ -80,10 +62,11 @@ def ajax_returnPoint(request):
 		#traceThread = utils.trace_thread.TraceThread(ip_des) #123.125.248.90
 		#traceThread.start()
 
+	#sleep一秒后开始trace_thread模块的SeekThread进程
 	time.sleep(1)
 	seekThread = utils.trace_thread.SeekThread(ip_des, need_seq)
 	seekThread.start()
-	seekThread.join()
+	seekThread.join()	#等待seekThread执行完执行主程序，并return
 	'''
 	while True:
 		try:
@@ -96,5 +79,5 @@ def ajax_returnPoint(request):
 			time.sleep(0.5)
 	'''
 	
-	print ("\nreturn point:%s" %utils.trace_thread.point_return)
-	return JsonResponse(utils.trace_thread.point_return)
+	print ("\nreturn point:%s" %utils.trace_thread.point_return)	
+	return JsonResponse(utils.trace_thread.point_return)	#返回trace_thread模块里的全局变量point_return

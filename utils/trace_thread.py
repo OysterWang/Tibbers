@@ -6,36 +6,66 @@ from subprocess import Popen, PIPE
 import utils.parse_geo
 import utils.parse_ipinfo
 
-point_return = {}
+"""
+此模块有两个进程TraceThread和SeekThread。
+TraceThread用于need_seq=1时，开始trace并保存结果到txt
+SeekThread用于不断读取txt中需要的行，并取出ip，根据ip查找相应信息并组成point字典，views中根据前台查询返回全局变量point_return
+
+point_return = {
+"flag" : 1,
+"seq"  : 1,
+"city" : "tianjin",
+"ip"   : "1.1.1.1",
+"coord": [117.20000,39.13333]
+}
+point_return = {
+"flag" : 0
+}
+"""
+point_return = {}	#全局变量，用于保存返回前台的结果point
 
 def tmp_trace_txt_url(domain_str):
+	"""
+	ThraceThread进程的trace结果保存路径
+	Args:
+	domain_str:要trace的域名或ip，用于组成txt文件名，名称规则trace_要trace的域名或ip
+	"""
 	tmp_trace_txt_url = "tmp/trace_"	#web用
 	#tmp_trace_txt_url = "../tmp/trace_"	#测试用
 	return tmp_trace_txt_url + domain_str + ".txt"
 
 class TraceThread(threading.Thread):
+	"""
+	TraceThread用于need_seq=1时，开始trace并保存结果到txt
+	"""
 	def __init__(self, domain_str):
+		"""
+		Args:
+		domain_str:要trace的域名或ip
+		"""
 		threading.Thread.__init__(self)
 		self.domain_str = domain_str
 		self.cmd_str = "tracert -d " + self.domain_str
 		self.ip_list = []
+		self.regex_ip = re.compile('(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|\*{1,3})')	#正则表达式：含有ip或者至少一个*的行
 		print("%s created!" %self.getName())
-		print("%s domain_str : %s "%(self.getName(), self.domain_str))
 		print("%s cmd_str : %s"%(self.getName(), self.cmd_str))
-		self.trace_txt = open(tmp_trace_txt_url(self.domain_str),"w")
+		self.trace_txt = open(tmp_trace_txt_url(self.domain_str),"w")	#保存trace结果的txt
 
 	def trace_extract_save(self):
-		regex_ip = re.compile('(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|\*{1,3})')
+		"""
+		含有ip或者至少一个*的行要保存到txt中
+		"""
 		p = Popen(self.cmd_str, stdout=PIPE)
 		num = 0
 		while True:
 			one_line = p.stdout.readline()
 			if not one_line:
 		   		break
-			ip_extract = regex_ip.findall(one_line.decode('gbk')) #抽出含有ip的每一hop  one_line.decode('gbk')
-			if len(ip_extract) >= 1:	#含有ip或者*的行要保存
+			ip_extract = self.regex_ip.findall(one_line.decode('gbk'))	#抽出含有ip或者至少一个*的行
+			if len(ip_extract) >= 1:
 				num += 1
-				self.trace_txt.write(one_line.decode('gbk').strip("\n"))	#oneline存入txt中	one_line.decode('gbk')
+				self.trace_txt.write(one_line.decode('gbk').strip("\n"))	#oneline存入txt中
 				self.trace_txt.flush()
 				#print("%s : write line[%d] ip:%s  %s" %(self.getName(), num, ip_extract[0], one_line))			
 		self.trace_txt.close()
@@ -46,47 +76,52 @@ class TraceThread(threading.Thread):
 		print ("%s over" %self.getName())
 
 class SeekThread(threading.Thread):
+	"""
+	SeekThread用于不断读取txt中需要的行，并取出ip，根据ip查找相应信息并组成point字典，views中根据前台查询返回全局变量point_return
+	"""
 	def __init__(self, domain_str, need_seq):
+		"""
+		Args:
+		domain_str:要trace的域名或ip
+		need_seq:当前需要的hop数
+		"""
 		threading.Thread.__init__(self)
 		self.domain_str = domain_str
 		self.need_seq = need_seq
 		self.target_ip = ""
-		#self.point = []
-		self.ip_list = []
-		self.readLinesNum = 70
-		self.regex_ip = re.compile('(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|\*{1,3})')
+		self.ip_list = []	#保存已经遍历过的ip，每次打开txt都初始化
+		self.regex_ip = re.compile('(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|\*{1,3})')	#正则表达式：含有ip或者至少一个*的行
 		print("******%s created. Need lines[%d]" %(self.getName(), self.need_seq))
 	
 	def seekSeq(self):
-		loop_time = 1
+		loop_time = 1	#循环读取关闭txt的次数
 		global point_return
-		while True:
+		point_return = {}
+		while True:	#循环读取关闭txt
 			time.sleep(1)
-			self.trace_txt = open(tmp_trace_txt_url(self.domain_str),"r")
+			self.trace_txt = open(tmp_trace_txt_url(self.domain_str),"r")	#要读取的txt
 			print("******%s the %d time open txt to seek lines[%d]" %(self.getName(), loop_time, self.need_seq))
 			loop_time += 1
-			flag = 0
-			self.ip_list = []
+			flag = 0	#读取到的line是第几行，每次打开txt都初始化
+			self.ip_list = []	#本次读取txt取出的list列表，每次打开txt都初始化
 
 			try:
-				#new
 				while True:
 					line = self.trace_txt.readline()
 					
 					print("******%s flag: %d origin line: %s" %(self.getName(), flag, line))
 					if not line:
-						print("******%s not line check , len(self.ip_list) = %d" %(self.getName(), len(self.ip_list)))
-						#检查是否已经trace完，判断上一个seq请求的是否已经是target_ip
-						if self.ip_list[len(self.ip_list) - 1] == self.target_ip:
-							point = {}
-							point['flag'] = 0
+						#没有line了：检查是否已经trace完，判断上一个seq请求的是否已经是target_ip
+						print("******%s not line, need check , len(self.ip_list) = %d" %(self.getName(), len(self.ip_list)))
+						if self.ip_list[len(self.ip_list) - 1] == self.target_ip:	#上个seq请求已经trace完毕，则设置point_return的flag=0
+							point_return['flag'] = 0
 							print("******%s already to the last hop" %(self.getName()))
-							print("******%s make it into point: %s" %(self.getName(), point))
-							point_return = point
+							print("******%s make it into point_return: %s" %(self.getName(), point_return))
 							return
-						break	#重新open
+						break	#否则没有trace完毕，重新open txt
 
-					if flag == 0:	#此行是第一行
+					#读取到line，做出处理
+					if flag == 0:	#若此行是第一行，读取ip为target_ip，继续读取下一行
 						ip_extract = self.regex_ip.findall(line)
 						self.target_ip = ip_extract[0]
 						flag += 1
@@ -94,59 +129,34 @@ class SeekThread(threading.Thread):
 						#print("******%s target_ip: %s" %(self.getName(), self.target_ip))
 						continue
 					else:	#此行不是第一行
-						if self.need_seq == flag:	#到了need_seq行
+						if self.need_seq == flag:	#flag如果到了need_seq行，就取出ip，并组装字典
+							print("******%s line[%d/%d]: %s" %(self.getName(), flag, self.need_seq, line))
 							ip_extract = self.regex_ip.findall(line)
 							if len(ip_extract) >= 1:
-								point = {}
-								#point["flag"] = 1  #常量
-								#point["seq"] = self.need_seq	#传参
-								#point["ip"] = ip_extract[0]	#传参
-								#point["city"] = "Tianjin"	#需parse
-								#point["coord"] = [117.20000,39.13333]	#需parse
-								#point = utils.parse_geo.parse_geo(ip_extract[0], self.need_seq)	#geo tool
-								point = utils.parse_ipinfo.parse_ipinfo(ip_extract[0], self.need_seq)	#ipinfo tool
+								#有两种方法得到字典point_return：parse_geo模块和parse_ipinfo模块，两个模块调用的网站不同。geo是网页抓取，ipinfo是api返回json。任选一种。
+								#point_return = utils.parse_geo.parse_geo(ip_extract[0], self.need_seq)	#geo tool
+								point_return = utils.parse_ipinfo.parse_ipinfo(ip_extract[0], self.need_seq)	#ipinfo tool
 								self.ip_list.append(ip_extract[0])
 								print("******%s find lines[%d]: %s  %s"%(self.getName(), self.need_seq, ip_extract[0], line))
-								print("******%s make it into point: %s" %(self.getName(), point))
+								print("******%s make it into point_return: %s" %(self.getName(), point_return))
 								print("******%s len(self.ip_list) = %d" %(self.getName(), len(self.ip_list)))
-								point_return = point
 								return
-								#return point
-						else:	#未到need_seq行，加入list
+						else:	#flag未到need_seq行，ip加入list，继续读取下一行
 							print("******%s not yet line[%d/%d]: %s" %(self.getName(), flag, self.need_seq, line))
 							ip_extract = self.regex_ip.findall(line)
 							if len(ip_extract) >= 1:
 								self.ip_list.append(ip_extract[0])
 							flag += 1
 							continue
-				#new
-				'''
-				if lines[self.need_seq]:	#需要的seq不为空则说明找到，生成point返回
-					ip_extract = self.regex_ip.findall(lines[self.need_seq])
-					if len(ip_extract) >= 1:
-						print("******%s find lines[%d]: %s"%(self.getName(), self.need_seq, ip_extract[0]))	#.decode('gbk')
-						point = {}
-						point['flag'] = 1
-						point['seq'] = seq
-						point['city'] = ""
-						point['ip'] = ip_extract[0]
-						point['coord'] = []
-						self.ip_list.append(ip_extract[0])	#ip存入ip_list
-						#self.points.append(point)
-						print("%s make into point: %s" %(self.getName(), point))
-						mutex.release()
-						return point
-				'''
 			except Exception as ex:
 				print("******%s Exception: %s" %(self.getName(), ex))
-				continue	#重新open
+				continue	#重新open txt
 
 	def run(self):
 		self.seekSeq()
 		print ("******%s over" %self.getName())
 
 if __name__ == "__main__":
-	global point_return
 	traceThread = TraceThread("www.baidu.com")
 	traceThread.start()
 	time.sleep(1)
@@ -154,5 +164,3 @@ if __name__ == "__main__":
 	seekThread.start()
 	time.sleep(10)
 	print("I need%s" %point_return)
-
-	

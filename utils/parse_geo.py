@@ -6,9 +6,12 @@ tmp_geoiptool_html_url = "tmp/geoiptool.html"	#web用
 #tmp_geoiptool_html_url = "../tmp/geoiptool.html"	#test用
 
 def parse_geo(ip, seq):
+	"""
+	此模块根据geoiptool网站，通过请求https://geoiptool.com/zh/?ip=x.x.x.x，得到结果信息页面，再通过正则表达式抽出需要的信息。
+	"""
 	print("in parse_geo, ip: %s, seq: %s" %(ip, seq))
-	regex_ip = re.compile('(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})')
-	regex_ip_private = re.compile('127[.]0[.]0[.]1|10[.]\d{1,3}[.]\d{1,3}[.]\d{1,3}|172[.]((1[6-9])|(2\d)|(3[01]))[.]\d{1,3}[.]\d{1,3}|192[.]168[.]\d{1,3}[.]\d{1,3}')
+	regex_ip = re.compile('(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})')	#ip正则表达式
+	regex_ip_private = re.compile('127[.]0[.]0[.]1|10[.]\d{1,3}[.]\d{1,3}[.]\d{1,3}|172[.]((1[6-9])|(2\d)|(3[01]))[.]\d{1,3}[.]\d{1,3}|192[.]168[.]\d{1,3}[.]\d{1,3}')	#私有ip正则表达式
 
 	list_ip = regex_ip.findall(ip)
 	list_ip_private = regex_ip_private.findall(ip)
@@ -21,8 +24,8 @@ def parse_geo(ip, seq):
 		point["ip"] = "*"
 		point["coord"] = []
 		return point
-	if len(list_ip_private) > 0:
-		print ("为私有ip，返回空point")
+	if len(list_ip_private) > 0:	#私有ip则返回特殊point
+		print ("私有ip，返回空point")
 		point = {}
 		point["flag"] = 1
 		point["seq"] = seq
