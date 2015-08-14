@@ -81,3 +81,6 @@ def ajax_returnPoint(request):
 	
 	print ("\nreturn point:%s" %utils.trace_thread.point_return)	
 	return JsonResponse(utils.trace_thread.point_return)	#返回trace_thread模块里的全局变量point_return
+
+def test(request):
+	return render(request, "test.html")

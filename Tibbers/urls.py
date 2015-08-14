@@ -24,6 +24,7 @@ urlpatterns = [
     url(r'^ajax_returnPoint/$', 'apps.trace.views.ajax_returnPoint', name='ajax_returnPoint'),
     url(r'^alive','apps.alive.views.index',name='alive'),
     url(r'^admin/', include(admin.site.urls)),  
+    url(r'^test', 'apps.trace.views.test')
 ]
 
 #引用static新加
